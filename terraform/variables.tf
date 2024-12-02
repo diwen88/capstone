@@ -15,6 +15,6 @@ variable "key_name" {
 }
 
 variable "ami_amz_l2" {
-  description = "AWS Linux 2 AMI"
-  default = "ami-0da6920932ded1a86"
+  description = "AWS Linux 2 AMI (64-bit (x86))"
+  default = "ami-061dd8b45bc7deb3d"
 }
