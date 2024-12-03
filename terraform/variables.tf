@@ -18,3 +18,8 @@ variable "ami_amz_l2" {
   description = "AWS Linux 2 AMI (64-bit (x86))"
   default = "ami-061dd8b45bc7deb3d"
 }
+
+variable "region" {
+  description = "AWS region"
+  default = "us-west-2"
+}
