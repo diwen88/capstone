@@ -1,31 +1,41 @@
-# create asg 
-resource "aws_autoscaling_group" "asg" {
-  name                      = "${var.env}-asg"
-  max_size                  = 2
-  min_size                  = 1
-  desired_capacity          = 1
-  health_check_grace_period = 40
-  health_check_type         = "ELB"
-  force_delete              = true
-  launch_configuration      = aws_launch_configuration.lc.name
-  vpc_zone_identifier       = [aws_subnet.public_subnet_1.id]
-  #target_group_arns         = [aws_lb_target_group.tg.arn]
-
-  tag {
-    key                 = "Name"
-    value               = "${var.env}-asg"
-    propagate_at_launch = true
-  }
-}
-
-# create launch configuration 
-resource "aws_launch_configuration" "lc" {
-  name          = "${var.env}-lc"
-  image_id      = "XXXXXXXXXXXXXXXXXXXXX"
-  instance_type = "${var.ec2_instance_type}"
-  key_name     = var.key_name
+# create launch template 
+resource "aws_launch_template" "lt" {
+  name                   = "${var.env}-lt"
+  image_id               = var.ami_amz_l2
+  instance_type          = var.ec2_instance_type
+  key_name               = var.key_name
+  vpc_security_group_ids = [aws_security_group.public_sg.id]
   lifecycle {
     create_before_destroy = true
   }
-  security_groups = [aws_security_group.public_sg.id]
+}
+
+# create autoscaling group 
+resource "aws_autoscaling_group" "asg" {
+  name                   = "${var.env}-asg"
+  max_size               = 4
+  min_size               = 2
+  desired_capacity       = 2
+  launch_template {
+    id      = aws_launch_template.lt.id
+    version = "$Latest"
+  }
+  vpc_zone_identifier = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
+  lifecycle {
+    ignore_changes = [load_balancers, target_group_arns]
+  }
+}
+
+# create autoscaling policy 
+resource "aws_autoscaling_policy" "asg_policy" {
+  name           = "${var.env}-asg-policy"
+  policy_type    = "TargetTrackingScaling"
+  autoscaling_group_name = aws_autoscaling_group.asg.name
+  estimated_instance_warmup = 180
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+    target_value = 80.0
+  }
 }

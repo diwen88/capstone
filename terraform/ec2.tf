@@ -1,9 +1,9 @@
 # create ec2 instance in public subnet 
 resource "aws_instance" "public_ec2" {
   ami           = var.ami_amz_l2
-  instance_type = "${var.ec2_instance_type}"
+  instance_type = var.ec2_instance_type
   subnet_id     = aws_subnet.public_subnet_1.id
-  key_name      = "${var.key_name}"
+  key_name      = var.key_name
   vpc_security_group_ids = [aws_security_group.public_sg.id]
 
   # enable public ip
